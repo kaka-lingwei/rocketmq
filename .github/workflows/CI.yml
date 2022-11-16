@@ -84,12 +84,13 @@ jobs:
         run: |
           cd rocketmq-k8s/image-build
           version=${{ github.event.pull_request.number || github.ref_name }}-$(uuidgen)
-          touch "${version}-`echo ${{ matrix.base-image }} | sed -e "s/:/-/g"`"
+          mkdir versionlist
+          touch versionlist/"${version}-`echo ${{ matrix.base-image }} | sed -e "s/:/-/g"`"
       - uses: actions/upload-artifact@v3
         name: Upload distribution tar
         with:
           name: versionlist
-          path: rocketmq-k8s/image-build/"${version}-`echo ${{ matrix.base-image }} | sed -e "s/:/-/g"`"
+          path: rocketmq-k8s/image-build/versionlist/*
 
   # unit-test:
   #   if: always()
