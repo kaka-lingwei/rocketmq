@@ -36,34 +36,34 @@ jobs:
       - name: Check results
         run: |
           [[ ${{ needs.code-style.result }} == 'success' ]] || exit 1;
-  dist-tar:
-    if: always() 
-    name: Build dist tar
-    needs: [sanity-check]
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
-      - uses: actions/setup-java@v3
-        with:
-          distribution: "temurin"
-          java-version: "8"
-          cache: "maven"
-      - name: Build distribution tar
-        run: |
-          mvn -Prelease-all -DskipTests clean install -U
-      - uses: actions/upload-artifact@v3
-        name: Upload distribution tar
-        with:
-          name: rocketmq
-          path: distribution/target/rocketmq*/rocketmq*
+  # dist-tar:
+  #   if: always() 
+  #   name: Build dist tar
+  #   needs: [sanity-check]
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 30
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: true
+  #     - uses: actions/setup-java@v3
+  #       with:
+  #         distribution: "temurin"
+  #         java-version: "8"
+  #         cache: "maven"
+  #     - name: Build distribution tar
+  #       run: |
+  #         mvn -Prelease-all -DskipTests clean install -U
+  #     - uses: actions/upload-artifact@v3
+  #       name: Upload distribution tar
+  #       with:
+  #         name: rocketmq
+  #         path: distribution/target/rocketmq*/rocketmq*
 
   docker:
     if: always() 
     name: Docker images
-    needs: [dist-tar]
+    # needs: [dist-tar]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -85,7 +85,6 @@ jobs:
           cd rocketmq-k8s/image-build
           version=${{ github.event.pull_request.number || github.ref_name }}-$(uuidgen)
           echo "${version}-`echo ${{ matrix.base-image }} | sed -e "s/:/-/g"`" >> versionlist
-          sh ./build-image.sh ${version} ${{ matrix.base-image }} ${{ secrets.DOCKER_REPO_USERNAME }} ${{ secrets.DOCKER_REPO_PASSWORD }}
       - uses: actions/upload-artifact@v3
         name: Upload distribution tar
         with:
@@ -141,13 +140,12 @@ jobs:
           path: versionlist
       - name: Deploy rocketmq
         run: |
-          ls versionlist
+          cat versionlist/versionlist
           for version in `cat versionlist/versionlist`;do echo "${version} deploy start..."; done
           sleep 3
           for version in `cat versionlist/versionlist`;do echo "${version} deploy done; done
       - name: Integration test
         run: |
-          ls versionlist
           for version in `cat versionlist/versionlist`;do echo "${version} test start..."; done
           sleep 3
           for version in `cat versionlist/versionlist`;do echo "${version} test done, please check report: http://aaa.com/report"; done
