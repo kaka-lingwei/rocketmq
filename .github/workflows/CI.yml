@@ -14,56 +14,57 @@ env:
   MAVEN_OPTS: -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
   
 jobs:
-  # code-style:
-  #   if: always()
-  #   name: Code style
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 10
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         submodules: true
-  #     - name: Check code style
-  #       run: mvn -B -q clean checkstyle:check
+  code-style:
+    if: always()
+    name: Code style
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Check code style
+        run: mvn -B -q clean checkstyle:check
 
-  # sanity-check:
-  #   if: always()
-  #   name: Sanity check results
-  #   needs: [code-style]
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 10
-  #   steps:
-  #     - name: Check results
-  #       run: |
-  #         [[ ${{ needs.code-style.result }} == 'success' ]] || exit 1;
-  # dist-tar:
-  #   if: always() 
-  #   name: Build dist tar
-  #   needs: [sanity-check]
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 30
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         submodules: true
-  #     - uses: actions/setup-java@v3
-  #       with:
-  #         distribution: "temurin"
-  #         java-version: "8"
-  #         cache: "maven"
-  #     - name: Build distribution tar
-  #       run: |
-  #         mvn -Prelease-all -DskipTests clean install -U
-  #     - uses: actions/upload-artifact@v3
-  #       name: Upload distribution tar
-  #       with:
-  #         name: rocketmq
-  #         path: distribution/target/rocketmq*/rocketmq*
+  sanity-check:
+    if: always()
+    name: Sanity check results
+    needs: [code-style]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check results
+        run: |
+          [[ ${{ needs.code-style.result }} == 'success' ]] || exit 1;
+          
+  dist-tar:
+    if: always() 
+    name: Build dist tar
+    needs: [sanity-check]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "8"
+          cache: "maven"
+      - name: Build distribution tar
+        run: |
+          mvn -Prelease-all -DskipTests clean install -U
+      - uses: actions/upload-artifact@v3
+        name: Upload distribution tar
+        with:
+          name: rocketmq
+          path: distribution/target/rocketmq*/rocketmq*
 
   docker:
     if: always() 
     name: Docker images
-    # needs: [dist-tar]
+    needs: [dist-tar]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -75,17 +76,18 @@ jobs:
           repository: deepsola/rocketmq-k8s.git
           ref: main
           path: rocketmq-k8s
-      # - uses: actions/download-artifact@v3
-      #   name: Download distribution tar
-      #   with:
-      #     name: rocketmq
-      #     path: rocketmq
+      - uses: actions/download-artifact@v3
+        name: Download distribution tar
+        with:
+          name: rocketmq
+          path: rocketmq
       - name: Build and save docker images
         run: |
           cd rocketmq-k8s/image-build
           version=${{ github.event.pull_request.number || github.ref_name }}-$(uuidgen)
           mkdir versionlist
           touch versionlist/"${version}-`echo ${{ matrix.base-image }} | sed -e "s/:/-/g"`"
+          sh ./build-image.sh ${version} ${{ matrix.base-image }} ${{ secrets.DOCKER_REPO_USERNAME }} ${{ secrets.DOCKER_REPO_PASSWORD }}
       - uses: actions/upload-artifact@v3
         name: Upload distribution tar
         with:
@@ -130,8 +132,7 @@ jobs:
   integration-test:
     if: always()
     name: Integration test
-    # needs: [sanity-check, docker]
-    needs: [docker]
+    needs: [sanity-check, docker]
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
