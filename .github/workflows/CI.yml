@@ -141,12 +141,13 @@ jobs:
           path: versionlist
       - name: Deploy rocketmq
         run: |
-          for version in `cat versionlist`;do echo "${version} deploy start..."; done
+          ls versionlist
+          for version in `cat versionlist/versionlist`;do echo "${version} deploy start..."; done
           sleep 3
-          for version in `cat versionlist`;do echo "${version} deploy done; done
+          for version in `cat versionlist/versionlist`;do echo "${version} deploy done; done
       - name: Integration test
         run: |
           ls versionlist
-          for version in `cat versionlist`;do echo "${version} test start..."; done
+          for version in `cat versionlist/versionlist`;do echo "${version} test start..."; done
           sleep 3
-          for version in `cat versionlist`;do echo "${version} test done, please check report: http://aaa.com/report"; done
+          for version in `cat versionlist/versionlist`;do echo "${version} test done, please check report: http://aaa.com/report"; done
