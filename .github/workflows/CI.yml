@@ -24,7 +24,7 @@ jobs:
         with:
           submodules: true
       - name: Check code style
-        run: ./mvnw -B -q clean checkstyle:check
+        run: mvn -B -q clean checkstyle:check
 
   sanity-check:
     if: always()
