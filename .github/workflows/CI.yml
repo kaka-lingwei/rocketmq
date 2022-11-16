@@ -14,28 +14,28 @@ env:
   MAVEN_OPTS: -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
   
 jobs:
-  code-style:
-    if: always()
-    name: Code style
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
-      - name: Check code style
-        run: mvn -B -q clean checkstyle:check
+  # code-style:
+  #   if: always()
+  #   name: Code style
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: true
+  #     - name: Check code style
+  #       run: mvn -B -q clean checkstyle:check
 
-  sanity-check:
-    if: always()
-    name: Sanity check results
-    needs: [code-style]
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Check results
-        run: |
-          [[ ${{ needs.code-style.result }} == 'success' ]] || exit 1;
+  # sanity-check:
+  #   if: always()
+  #   name: Sanity check results
+  #   needs: [code-style]
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   steps:
+  #     - name: Check results
+  #       run: |
+  #         [[ ${{ needs.code-style.result }} == 'success' ]] || exit 1;
   # dist-tar:
   #   if: always() 
   #   name: Build dist tar
@@ -84,12 +84,12 @@ jobs:
         run: |
           cd rocketmq-k8s/image-build
           version=${{ github.event.pull_request.number || github.ref_name }}-$(uuidgen)
-          echo "${version}-`echo ${{ matrix.base-image }} | sed -e "s/:/-/g"`" >> versionlist
+          touch "${version}-`echo ${{ matrix.base-image }} | sed -e "s/:/-/g"`"
       - uses: actions/upload-artifact@v3
         name: Upload distribution tar
         with:
           name: versionlist
-          path: rocketmq-k8s/image-build/versionlist
+          path: rocketmq-k8s/image-build/"${version}-`echo ${{ matrix.base-image }} | sed -e "s/:/-/g"`"
 
   # unit-test:
   #   if: always()
@@ -129,7 +129,8 @@ jobs:
   integration-test:
     if: always()
     name: Integration test
-    needs: [sanity-check, docker]
+    # needs: [sanity-check, docker]
+    needs: [docker]
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -140,12 +141,12 @@ jobs:
           path: versionlist
       - name: Deploy rocketmq
         run: |
-          cat versionlist/versionlist
-          for version in `cat versionlist/versionlist`;do echo "${version} deploy start..."; done
+          ls versionlist
+          for version in `ls versionlist`;do echo "${version} deploy start..."; done
           sleep 3
-          for version in `cat versionlist/versionlist`;do echo "${version} deploy done; done
+          for version in `ls versionlist`;do echo "${version} deploy ok; done
       - name: Integration test
         run: |
-          for version in `cat versionlist/versionlist`;do echo "${version} test start..."; done
+          for version in `ls versionlist`;do echo "${version} test start..."; done
           sleep 3
-          for version in `cat versionlist/versionlist`;do echo "${version} test done, please check report: http://aaa.com/report"; done
+          for version in `ls versionlist`;do echo "${version} test ok, please check report: http://aaa.com/report"; done
