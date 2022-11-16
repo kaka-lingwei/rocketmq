@@ -73,7 +73,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: https://github.com/deepsola/rocketmq-k8s.git
+          repository: https://github.com/deepsola/rocketmq-k8s.git
+          path: rocketmq-k8s
       - uses: actions/download-artifact@v3
         name: Download distribution tar
         with:
