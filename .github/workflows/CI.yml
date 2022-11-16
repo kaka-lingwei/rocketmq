@@ -91,7 +91,7 @@ jobs:
         name: Upload distribution tar
         with:
           name: versionlist
-          path: versionlist
+          path: rocketmq-k8s/image-build/versionlist
 
   # unit-test:
   #   if: always()
