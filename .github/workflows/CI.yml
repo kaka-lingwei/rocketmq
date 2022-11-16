@@ -73,7 +73,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          repository: https://github.com/deepsola/rocketmq-k8s.git
+          repository: deepsola/rocketmq-k8s.git
           path: rocketmq-k8s
       - uses: actions/download-artifact@v3
         name: Download distribution tar
@@ -92,40 +92,40 @@ jobs:
           name: versionlist
           path: versionlist
 
-  unit-test:
-    if: always()
-    name: Unit test
-    needs: [sanity-check]
-    runs-on: ${{ matrix.os }}-latest
-    timeout-minutes: 30
-    strategy:
-      matrix:
-        os: [ubuntu, macos, windows]
-        java-version: [8]
-        include:
-          - os: ubuntu
-            java-version: 11
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
-      - name: Cache maven repository
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-maven-
-      - uses: actions/setup-java@v3
-        with:
-          java-version: ${{ matrix.java-version }}
-          distribution: adopt
-      - name: Generate coverage report
-        run: mvn -B test -T 2C --file pom.xml
-      - name: Upload to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          fail_ci_if_error: true
-          verbose: true
+  # unit-test:
+  #   if: always()
+  #   name: Unit test
+  #   needs: [sanity-check]
+  #   runs-on: ${{ matrix.os }}-latest
+  #   timeout-minutes: 30
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu, macos, windows]
+  #       java-version: [8]
+  #       include:
+  #         - os: ubuntu
+  #           java-version: 11
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: true
+  #     - name: Cache maven repository
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: ~/.m2/repository
+  #         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+  #         restore-keys: ${{ runner.os }}-maven-
+  #     - uses: actions/setup-java@v3
+  #       with:
+  #         java-version: ${{ matrix.java-version }}
+  #         distribution: adopt
+  #     - name: Generate coverage report
+  #       run: mvn -B test -T 2C --file pom.xml
+  #     - name: Upload to Codecov
+  #       uses: codecov/codecov-action@v3
+  #       with:
+  #         fail_ci_if_error: true
+  #         verbose: true
 
   integration-test:
     if: always()
