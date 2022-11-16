@@ -75,11 +75,11 @@ jobs:
           repository: deepsola/rocketmq-k8s.git
           ref: main
           path: rocketmq-k8s
-      - uses: actions/download-artifact@v3
-        name: Download distribution tar
-        with:
-          name: rocketmq
-          path: rocketmq
+      # - uses: actions/download-artifact@v3
+      #   name: Download distribution tar
+      #   with:
+      #     name: rocketmq
+      #     path: rocketmq
       - name: Build and save docker images
         run: |
           cd rocketmq-k8s/image-build
