@@ -36,7 +36,6 @@ jobs:
       - name: Check results
         run: |
           [[ ${{ needs.code-style.result }} == 'success' ]] || exit 1;
-
   dist-tar:
     if: always() 
     name: Build dist tar
@@ -142,11 +141,11 @@ jobs:
           path: versionlist
       - name: Deploy rocketmq
         run: |
-          for version in `cat versionlist`;do; echo "${version} deploy start..."; done
+          for version in `cat versionlist`;do echo "${version} deploy start..."; done
           sleep 3
-          for version in `cat versionlist`;do; echo "${version} deploy done; done
+          for version in `cat versionlist`;do echo "${version} deploy done; done
       - name: Integration test
         run: |
-          for version in `cat versionlist`;do; echo "${version} test start..."; done
+          for version in `cat versionlist`;do echo "${version} test start..."; done
           sleep 3
-          for version in `cat versionlist`;do; echo "${version} test done, please check report: http://aaa.com/report"; done
+          for version in `cat versionlist`;do echo "${version} test done, please check report: http://aaa.com/report"; done
