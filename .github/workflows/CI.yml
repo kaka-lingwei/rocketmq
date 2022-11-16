@@ -130,7 +130,7 @@ jobs:
   integration-test:
     if: always()
     name: Integration test
-    needs: [sanity-check, docker, unit-test]
+    needs: [sanity-check, docker]
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
