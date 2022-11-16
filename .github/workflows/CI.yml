@@ -145,7 +145,7 @@ jobs:
           ls versionlist
           for version in `ls versionlist`;do echo "${version} deploy start..."; done
           sleep 3
-          for version in `ls versionlist`;do echo "${version} deploy ok; done
+          for version in `ls versionlist`;do echo "${version} deploy done"; done
       - name: Integration test
         run: |
           for version in `ls versionlist`;do echo "${version} test start..."; done
