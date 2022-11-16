@@ -84,7 +84,7 @@ jobs:
       - name: Build and save docker images
         run: |
           cd rocketmq-k8s/image-build
-          version=${{ github.event.pull_request.number || github.ref_name }}-$((`date '+%s'`*1000+`date '+%N'`/1000000))
+          version=${{ github.event.pull_request.number || github.ref_name }}-$(uuidgen)
           echo "${version}-`echo ${{ matrix.base-image }} | sed -e "s/:/-/g"`" >> versionlist
           sh ./build-image.sh ${version} ${{ matrix.base-image }} ${{ secrets.DOCKER_REPO_USERNAME }} ${{ secrets.DOCKER_REPO_PASSWORD }}
       - uses: actions/upload-artifact@v3
