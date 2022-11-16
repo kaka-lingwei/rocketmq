@@ -146,6 +146,7 @@ jobs:
           for version in `cat versionlist`;do echo "${version} deploy done; done
       - name: Integration test
         run: |
+          ls versionlist
           for version in `cat versionlist`;do echo "${version} test start..."; done
           sleep 3
           for version in `cat versionlist`;do echo "${version} test done, please check report: http://aaa.com/report"; done
