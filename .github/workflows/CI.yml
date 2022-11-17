@@ -69,7 +69,7 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        base-image: ["eclipse-temurin:8-jdk-alpine", "eclipse-temurin:11-jdk-alpine", "eclipse-temurin:11-jdk-centos7", "eclipse-temurin:8-jdk-centos7"]
+        base-image: ["eclipse-temurin:8-jdk-alpine"]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -144,8 +144,8 @@ jobs:
       - uses: deepsola/onetest-action@v0.0.3
         name: Deploy rocketmq
         with:
+          test-version: "/home/runner/work/rocketmq/rocketmq/versionlist/"
           ask-config: "${{ secrets.ASK_CONFIG }}"
-          version: "/home/runner/work/rocketmq/rocketmq/versionlist/"
           oss-ak: "${{ secrets.OSS_AK }}"
           oss-sk: "${{ secrets.OSS_SK }}"
           docker-repo-username: "${{ secrets.DOCKER_REPO_USERNAME }}"
