@@ -144,7 +144,7 @@ jobs:
       - name: Show versions
         id: show_versions
         run: echo VERSIONS=`ls versionlist` >> $GITHUB_OUTPUT
-      - uses: deepsola/onetest-action@v0.0.4
+      - uses: deepsola/onetest-action@v0.0.5
         name: Deploy rocketmq
         with:
           ask-config: "${{ secrets.ASK_CONFIG }}"
