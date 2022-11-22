@@ -134,7 +134,7 @@ jobs:
     name: Deploy
     needs: [docker]
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 60
     steps:
       - uses: actions/download-artifact@v3
         name: Download versionlist
@@ -164,7 +164,7 @@ jobs:
     name: Integration test
     needs: [deploy]
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 60
     steps:
       - uses: actions/download-artifact@v3
         name: Download versionlist
