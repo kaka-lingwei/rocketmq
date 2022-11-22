@@ -131,7 +131,7 @@ jobs:
 
   deploy:
     if: always()
-    name: Deploy
+    name: Deploy and test
     needs: [docker]
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -158,21 +158,3 @@ jobs:
           chart-path: "./"
           test-code-git: "https://gitee.com/deepsola/rocketmq-test.git"
           test-cmd: "mvn test"
-          
-  integration-test:
-    if: always()
-    name: Integration test
-    needs: [deploy]
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    steps:
-      - uses: actions/download-artifact@v3
-        name: Download versionlist
-        with:
-          name: versionlist
-          path: versionlist
-      - name: Integration test
-        run: |
-          for version in `ls versionlist`;do echo "${version} test start..."; done
-          sleep 3
-          for version in `ls versionlist`;do echo "${version} test ok, please check report: http://aaa.com/report"; done
