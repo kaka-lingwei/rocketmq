@@ -144,7 +144,7 @@ jobs:
       - name: Show versions
         id: show_versions
         run: echo VERSIONS=`ls versionlist` >> $GITHUB_OUTPUT
-      - uses: deepsola/onetest-action@v0.0.2
+      - uses: deepsola/onetest-action@v0.0.3
         name: Deploy rocketmq
         with:
           ask-config: "${{ secrets.ASK_CONFIG }}"
@@ -156,7 +156,9 @@ jobs:
           chart-git: "https://ghproxy.com/https://github.com/deepsola/rocketmq-k8s.git"
           chart-branch: "go"
           chart-path: "./"
-
+          test-code-git: "https://gitee.com/deepsola/rocketmq-test.git"
+          test-cmd: "mvn test"
+          
   integration-test:
     if: always()
     name: Integration test
