@@ -30,15 +30,15 @@ import org.apache.rocketmq.controller.impl.manager.ReplicasInfoManager;
 import org.apache.rocketmq.remoting.protocol.RemotingSerializable;
 import org.apache.rocketmq.remoting.protocol.ResponseCode;
 import org.apache.rocketmq.remoting.protocol.body.SyncStateSet;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.controller.AlterSyncStateSetRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.controller.AlterSyncStateSetResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.controller.CleanControllerBrokerDataRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.controller.ElectMasterRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.controller.ElectMasterResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.controller.GetReplicaInfoRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.controller.GetReplicaInfoResponseHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.controller.RegisterBrokerToControllerRequestHeader;
-import org.apache.rocketmq.remoting.protocol.header.namesrv.controller.RegisterBrokerToControllerResponseHeader;
+import org.apache.rocketmq.remoting.protocol.header.controller.AlterSyncStateSetRequestHeader;
+import org.apache.rocketmq.remoting.protocol.header.controller.AlterSyncStateSetResponseHeader;
+import org.apache.rocketmq.remoting.protocol.header.controller.CleanControllerBrokerDataRequestHeader;
+import org.apache.rocketmq.remoting.protocol.header.controller.ElectMasterRequestHeader;
+import org.apache.rocketmq.remoting.protocol.header.controller.ElectMasterResponseHeader;
+import org.apache.rocketmq.remoting.protocol.header.controller.GetReplicaInfoRequestHeader;
+import org.apache.rocketmq.remoting.protocol.header.controller.GetReplicaInfoResponseHeader;
+import org.apache.rocketmq.remoting.protocol.header.controller.RegisterBrokerToControllerRequestHeader;
+import org.apache.rocketmq.remoting.protocol.header.controller.RegisterBrokerToControllerResponseHeader;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -126,29 +126,38 @@ public class ReplicasInfoManagerTest {
 
     public void mockHeartbeatDataMasterStillAlive() {
         this.heartbeatManager.registerBroker("cluster1", "broker1", "127.0.0.1:9000", 1L, 10000000000L, null,
-            1, 3L);
+            1, 3L, 0);
         this.heartbeatManager.registerBroker("cluster1", "broker1", "127.0.0.1:9001", 1L, 10000000000L, null,
-            1, 2L);
+            1, 2L, 0);
         this.heartbeatManager.registerBroker("cluster1", "broker1", "127.0.0.1:9002", 1L, 10000000000L, null,
-            1, 3L);
+            1, 3L, 0);
     }
 
     public void mockHeartbeatDataHigherEpoch() {
         this.heartbeatManager.registerBroker("cluster1", "broker1", "127.0.0.1:9000", 1L, -10000L, null,
-            1, 3L);
+            1, 3L, 0);
         this.heartbeatManager.registerBroker("cluster1", "broker1", "127.0.0.1:9001", 1L, 10000000000L, null,
-            1, 2L);
+            1, 2L, 0);
         this.heartbeatManager.registerBroker("cluster1", "broker1", "127.0.0.1:9002", 1L, 10000000000L, null,
-            0, 3L);
+            0, 3L, 0);
     }
 
     public void mockHeartbeatDataHigherOffset() {
         this.heartbeatManager.registerBroker("cluster1", "broker1", "127.0.0.1:9000", 1L, -10000L, null,
-            1, 3L);
+            1, 3L, 0);
         this.heartbeatManager.registerBroker("cluster1", "broker1", "127.0.0.1:9001", 1L, 10000000000L, null,
-            1, 2L);
+            1, 2L, 0);
         this.heartbeatManager.registerBroker("cluster1", "broker1", "127.0.0.1:9002", 1L, 10000000000L, null,
-            1, 3L);
+            1, 3L, 0);
+    }
+
+    public void mockHeartbeatDataHigherPriority() {
+        this.heartbeatManager.registerBroker("cluster1", "broker1", "127.0.0.1:9000", 1L, -10000L, null,
+                1, 3L, 3);
+        this.heartbeatManager.registerBroker("cluster1", "broker1", "127.0.0.1:9001", 1L, 10000000000L, null,
+                1, 3L, 2);
+        this.heartbeatManager.registerBroker("cluster1", "broker1", "127.0.0.1:9002", 1L, 10000000000L, null,
+                1, 3L, 1);
     }
 
     @Test
@@ -184,6 +193,20 @@ public class ReplicasInfoManagerTest {
         mockHeartbeatDataHigherOffset();
         final ControllerResult<ElectMasterResponseHeader> cResult = this.replicasInfoManager.electMaster(request,
             electPolicy);
+        final ElectMasterResponseHeader response = cResult.getResponse();
+        assertEquals(response.getMasterEpoch(), 2);
+        assertFalse(response.getNewMasterAddress().isEmpty());
+        assertEquals("127.0.0.1:9002", response.getNewMasterAddress());
+    }
+
+    @Test
+    public void testElectMasterPreferHigherPriorityWhenEpochAndOffsetEquals() {
+        mockMetaData();
+        final ElectMasterRequestHeader request = new ElectMasterRequestHeader("broker1");
+        ElectPolicy electPolicy = new DefaultElectPolicy(this.heartbeatManager::isBrokerActive, this.heartbeatManager::getBrokerLiveInfo);
+        mockHeartbeatDataHigherPriority();
+        final ControllerResult<ElectMasterResponseHeader> cResult = this.replicasInfoManager.electMaster(request,
+                electPolicy);
         final ElectMasterResponseHeader response = cResult.getResponse();
         assertEquals(response.getMasterEpoch(), 2);
         assertFalse(response.getNewMasterAddress().isEmpty());

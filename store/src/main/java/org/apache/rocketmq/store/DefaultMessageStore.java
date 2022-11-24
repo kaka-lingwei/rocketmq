@@ -71,8 +71,8 @@ import org.apache.rocketmq.common.topic.TopicValidator;
 import org.apache.rocketmq.common.utils.CleanupPolicyUtils;
 import org.apache.rocketmq.common.utils.QueueTypeUtils;
 import org.apache.rocketmq.common.utils.ServiceProvider;
-import org.apache.rocketmq.logging.InternalLogger;
-import org.apache.rocketmq.logging.InternalLoggerFactory;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.protocol.body.HARuntimeInfo;
 import org.apache.rocketmq.store.config.BrokerRole;
 import org.apache.rocketmq.store.config.FlushDiskType;
@@ -99,7 +99,7 @@ import org.apache.rocketmq.store.timer.TimerMessageStore;
 import org.apache.rocketmq.store.util.PerfCounter;
 
 public class DefaultMessageStore implements MessageStore {
-    private static final InternalLogger LOGGER = InternalLoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
 
     public final PerfCounter.Ticks perfs = new PerfCounter.Ticks(LOGGER);
 
@@ -206,7 +206,7 @@ public class DefaultMessageStore implements MessageStore {
                 this.haService = new AutoSwitchHAService();
                 LOGGER.warn("Load AutoSwitch HA Service: {}", AutoSwitchHAService.class.getSimpleName());
             } else {
-                this.haService = ServiceProvider.loadClass(ServiceProvider.HA_SERVICE_ID, HAService.class);
+                this.haService = ServiceProvider.loadClass(HAService.class);
                 if (null == this.haService) {
                     this.haService = new DefaultHAService();
                     LOGGER.warn("Load default HA Service: {}", DefaultHAService.class.getSimpleName());
@@ -1371,6 +1371,10 @@ public class DefaultMessageStore implements MessageStore {
         return this.reputMessageService.behind();
     }
 
+    public long flushBehindBytes() {
+        return this.commitLog.remainHowManyDataToCommit() + this.commitLog.remainHowManyDataToFlush();
+    }
+
     @Override
     public long flush() {
         return this.commitLog.flush();
@@ -1589,21 +1593,21 @@ public class DefaultMessageStore implements MessageStore {
 
         this.scheduledExecutorService.scheduleAtFixedRate(new AbstractBrokerRunnable(this.getBrokerIdentity()) {
             @Override
-            public void run2() {
+            public void run0() {
                 DefaultMessageStore.this.cleanFilesPeriodically();
             }
         }, 1000 * 60, this.messageStoreConfig.getCleanResourceInterval(), TimeUnit.MILLISECONDS);
 
         this.scheduledExecutorService.scheduleAtFixedRate(new AbstractBrokerRunnable(this.getBrokerIdentity()) {
             @Override
-            public void run2() {
+            public void run0() {
                 DefaultMessageStore.this.checkSelf();
             }
         }, 1, 10, TimeUnit.MINUTES);
 
         this.scheduledExecutorService.scheduleAtFixedRate(new AbstractBrokerRunnable(this.getBrokerIdentity()) {
             @Override
-            public void run2() {
+            public void run0() {
                 if (DefaultMessageStore.this.getMessageStoreConfig().isDebugLockEnable()) {
                     try {
                         if (DefaultMessageStore.this.commitLog.getBeginTimeInLock() != 0) {
@@ -1624,7 +1628,7 @@ public class DefaultMessageStore implements MessageStore {
 
         this.scheduledExecutorService.scheduleAtFixedRate(new AbstractBrokerRunnable(this.getBrokerIdentity()) {
             @Override
-            public void run2() {
+            public void run0() {
                 DefaultMessageStore.this.storeCheckpoint.flush();
             }
         }, 1, 1, TimeUnit.SECONDS);
@@ -2052,7 +2056,7 @@ public class DefaultMessageStore implements MessageStore {
         }
 
         public String getServiceName() {
-            return DefaultMessageStore.this.brokerConfig.getLoggerIdentifier() + CleanCommitLogService.class.getSimpleName();
+            return DefaultMessageStore.this.brokerConfig.getIdentifier() + CleanCommitLogService.class.getSimpleName();
         }
 
         private boolean isTimeToDelete() {
@@ -2249,7 +2253,7 @@ public class DefaultMessageStore implements MessageStore {
         }
 
         public String getServiceName() {
-            return DefaultMessageStore.this.brokerConfig.getLoggerIdentifier() + CleanConsumeQueueService.class.getSimpleName();
+            return DefaultMessageStore.this.brokerConfig.getIdentifier() + CleanConsumeQueueService.class.getSimpleName();
         }
     }
 
@@ -2367,7 +2371,7 @@ public class DefaultMessageStore implements MessageStore {
 
         public String getServiceName() {
             if (brokerConfig.isInBrokerContainer()) {
-                return brokerConfig.getLoggerIdentifier() + CorrectLogicOffsetService.class.getSimpleName();
+                return brokerConfig.getIdentifier() + CorrectLogicOffsetService.class.getSimpleName();
             }
             return CorrectLogicOffsetService.class.getSimpleName();
         }
@@ -2439,7 +2443,7 @@ public class DefaultMessageStore implements MessageStore {
         @Override
         public String getServiceName() {
             if (DefaultMessageStore.this.brokerConfig.isInBrokerContainer()) {
-                return DefaultMessageStore.this.getBrokerIdentity().getLoggerIdentifier() + FlushConsumeQueueService.class.getSimpleName();
+                return DefaultMessageStore.this.getBrokerIdentity().getIdentifier() + FlushConsumeQueueService.class.getSimpleName();
             }
             return FlushConsumeQueueService.class.getSimpleName();
         }
@@ -2615,7 +2619,7 @@ public class DefaultMessageStore implements MessageStore {
         @Override
         public String getServiceName() {
             if (DefaultMessageStore.this.getBrokerConfig().isInBrokerContainer()) {
-                return DefaultMessageStore.this.getBrokerIdentity().getLoggerIdentifier() + ReputMessageService.class.getSimpleName();
+                return DefaultMessageStore.this.getBrokerIdentity().getIdentifier() + ReputMessageService.class.getSimpleName();
             }
             return ReputMessageService.class.getSimpleName();
         }

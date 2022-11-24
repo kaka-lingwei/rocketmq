@@ -23,11 +23,11 @@ import org.apache.rocketmq.common.constant.PermName;
 import org.apache.rocketmq.common.message.MessageRequestMode;
 import org.apache.rocketmq.common.topic.TopicValidator;
 import org.apache.rocketmq.common.utils.NetworkUtil;
-import org.apache.rocketmq.logging.InternalLogger;
-import org.apache.rocketmq.logging.InternalLoggerFactory;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 
 public class BrokerConfig extends BrokerIdentity {
-    private static final InternalLogger log = InternalLoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
 
     private String brokerConfigPath = null;
 
@@ -335,6 +335,13 @@ public class BrokerConfig extends BrokerIdentity {
     private long checkSyncStateSetPeriod = 5 * 1000;
 
     private long syncControllerMetadataPeriod = 10 * 1000;
+
+    /**
+     * It is an important basis for the controller to choose the broker master.
+     * The lower the value of brokerElectionPriority, the higher the priority of the broker being selected as the master.
+     * You can set a lower priority for the broker with better machine conditions.
+     */
+    private int brokerElectionPriority = Integer.MAX_VALUE;
 
     public enum MetricsExporterType {
         DISABLE(0),
@@ -1420,6 +1427,14 @@ public class BrokerConfig extends BrokerIdentity {
 
     public void setSyncControllerMetadataPeriod(long syncControllerMetadataPeriod) {
         this.syncControllerMetadataPeriod = syncControllerMetadataPeriod;
+    }
+
+    public int getBrokerElectionPriority() {
+        return brokerElectionPriority;
+    }
+
+    public void setBrokerElectionPriority(int brokerElectionPriority) {
+        this.brokerElectionPriority = brokerElectionPriority;
     }
 
     public boolean isRecoverConcurrently() {

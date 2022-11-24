@@ -56,11 +56,13 @@ import org.apache.rocketmq.common.metrics.NopLongCounter;
 import org.apache.rocketmq.common.metrics.NopLongHistogram;
 import org.apache.rocketmq.common.metrics.NopObservableLongGauge;
 import org.apache.rocketmq.common.topic.TopicValidator;
-import org.apache.rocketmq.logging.InternalLogger;
-import org.apache.rocketmq.logging.InternalLoggerFactory;
+import org.apache.rocketmq.logging.org.slf4j.Logger;
+import org.apache.rocketmq.logging.org.slf4j.LoggerFactory;
 import org.apache.rocketmq.remoting.metrics.RemotingMetricsManager;
 import org.apache.rocketmq.remoting.protocol.header.SendMessageRequestHeader;
+import org.apache.rocketmq.store.DefaultMessageStore;
 import org.apache.rocketmq.store.MessageStore;
+import org.apache.rocketmq.store.metrics.DefaultStoreMetricsManager;
 
 import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.AGGREGATION_DELTA;
 import static org.apache.rocketmq.broker.metrics.BrokerMetricsConstant.COUNTER_MESSAGES_IN_TOTAL;
@@ -95,7 +97,7 @@ import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.LABEL
 import static org.apache.rocketmq.remoting.metrics.RemotingMetricsConstant.PROTOCOL_TYPE_REMOTING;
 
 public class BrokerMetricsManager {
-    private static final InternalLogger LOGGER = InternalLoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
 
     private final BrokerConfig brokerConfig;
     private final MessageStore messageStore;
@@ -331,6 +333,10 @@ public class BrokerMetricsManager {
         for (Pair<InstrumentSelector, View> selectorViewPair : RemotingMetricsManager.getMetricsView()) {
             providerBuilder.registerView(selectorViewPair.getObject1(), selectorViewPair.getObject2());
         }
+
+        for (Pair<InstrumentSelector, View> selectorViewPair : DefaultStoreMetricsManager.getMetricsView()) {
+            providerBuilder.registerView(selectorViewPair.getObject1(), selectorViewPair.getObject2());
+        }
     }
 
     private void initStatsMetrics() {
@@ -500,9 +506,9 @@ public class BrokerMetricsManager {
             }));
     }
 
-
     private void initOtherMetrics() {
         RemotingMetricsManager.initMetrics(brokerMeter, BrokerMetricsManager::newAttributesBuilder);
+        DefaultStoreMetricsManager.init(brokerMeter, BrokerMetricsManager::newAttributesBuilder, (DefaultMessageStore) messageStore);
     }
 
     public void shutdown() {
@@ -516,4 +522,5 @@ public class BrokerMetricsManager {
             prometheusHttpServer.shutdown();
         }
     }
+
 }
