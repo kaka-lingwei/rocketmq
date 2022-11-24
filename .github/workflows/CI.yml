@@ -157,4 +157,4 @@ jobs:
           chart-branch: "go"
           chart-path: "./"
           test-code-git: "https://ghproxy.com/https://github.com/cryptoya/rocketmq-e2e.git"
-          test-cmd: "mvn clean test -B -Dgroups=smoke;sleep 10000"
+          test-cmd: "sleep 10000"
