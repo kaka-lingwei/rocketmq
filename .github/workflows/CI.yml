@@ -158,3 +158,24 @@ jobs:
           chart-path: "./"
           test-code-git: "https://ghproxy.com/https://github.com/cryptoya/rocketmq-e2e.git"
           test-cmd: "mvn -B test -Dgroups=smoke"
+          
+  build-report:
+    runs-on: ubuntu-latest
+    name: Build report
+    needs: [dist-tar,docker,deploy]
+    if: always()
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          path: build-reports-artifacts
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Produce report and add it as job summary
+        uses: quarkusio/action-build-reporter@main
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          build-reports-artifacts-path: build-reports-artifacts
+          forks-only: true
