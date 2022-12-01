@@ -1,0 +1,211 @@
+name: CI2
+
+on:
+  pull_request:
+  push:
+  #schedule:
+  #  - cron: "0 18 * * *" # TimeZone: UTC 0
+
+concurrency:
+  group: rocketmq-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  MAVEN_OPTS: -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
+  
+jobs:
+  # code-style:
+  #   if: always()
+  #   name: Code style
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: true
+  #     - name: Check code style
+  #       run: mvn -B -q clean checkstyle:check
+
+  # sanity-check:
+  #   if: always()
+  #   name: Sanity check results
+  #   needs: [code-style]
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   steps:
+  #     - name: Check results
+  #       run: |
+  #         [[ ${{ needs.code-style.result }} == 'success' ]] || exit 1;
+
+  dist-tar:
+    if: always() 
+    name: Build dist tar
+    #needs: [sanity-check]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "8"
+          cache: "maven"
+      - name: Build distribution tar
+        run: |
+          mvn -Prelease-all -DskipTests clean install -U
+      - uses: actions/upload-artifact@v3
+        name: Upload distribution tar
+        with:
+          name: rocketmq
+          path: distribution/target/rocketmq*/rocketmq*
+
+  docker:
+    if: always() 
+    name: Docker images
+    needs: [dist-tar]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        base-image: ["openjdk:8-alpine","centos:7"]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: deepsola/rocketmq-k8s.git
+          ref: go
+          path: rocketmq-k8s
+      - uses: actions/download-artifact@v3
+        name: Download distribution tar
+        with:
+          name: rocketmq
+          path: rocketmq
+      - name: Build and save docker images
+        id: build-images
+        run: |
+          cd rocketmq-k8s/image-build
+          version=${{ github.event.pull_request.number || github.ref_name }}-$(uuidgen)
+          mkdir versionlist
+          touch versionlist/"${version}-`echo ${{ matrix.base-image }} | sed -e "s/:/-/g"`"
+          sh ./build-image.sh ${version} ${{ matrix.base-image }} ${{ secrets.DOCKER_REPO_USERNAME }} ${{ secrets.DOCKER_REPO_PASSWORD }}
+      - uses: actions/upload-artifact@v3
+        name: Upload distribution tar
+        with:
+          name: versionlist
+          path: rocketmq-k8s/image-build/versionlist/*
+
+  
+  list-version:
+    if: always() 
+    name: List version
+    needs: [docker]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      version-json: ${{ steps.show_versions.outputs.version-json }}
+    steps:
+      - uses: actions/download-artifact@v3
+        name: Download versionlist
+        with:
+          name: versionlist
+          path: versionlist
+      - name: Show versions
+        id: show_versions
+        run: | 
+          a=(`ls versionlist`)
+          printf '%s\n' "${a[@]}" | jq -R . | jq -s .
+          echo version-json=`printf '%s\n' "${a[@]}" | jq -R . | jq -s .` >> $GITHUB_OUTPUT
+
+  # unit-test:
+  #   if: always()
+  #   name: Unit test
+  #   needs: [sanity-check]
+  #   runs-on: ${{ matrix.os }}-latest
+  #   timeout-minutes: 30
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu, macos, windows]
+  #       java-version: [8]
+  #       include:
+  #         - os: ubuntu
+  #           java-version: 11
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: true
+  #     - name: Cache maven repository
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: ~/.m2/repository
+  #         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+  #         restore-keys: ${{ runner.os }}-maven-
+  #     - uses: actions/setup-java@v3
+  #       with:
+  #         java-version: ${{ matrix.java-version }}
+  #         distribution: adopt
+  #     - name: Generate coverage report
+  #       run: mvn -B test -T 2C --file pom.xml
+  #     - name: Upload to Codecov
+  #       uses: codecov/codecov-action@v3
+  #       with:
+  #         fail_ci_if_error: true
+  #         verbose: true
+
+  deploy:
+    if: always()
+    name: Deploy and test
+    needs: [list-version,docker]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      matrix:
+        version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
+    steps:
+      - uses: deepsola/onetest-action@v0.1.2
+        name: Deploy rocketmq
+        with:
+          action: "deploy"
+          ask-config: "${{ secrets.ASK_CONFIG }}"
+          test-version: "${{ matrix.version }}"
+          docker-repo-username: "${{ secrets.DOCKER_REPO_USERNAME }}"
+          docker-repo-password: "${{ secrets.DOCKER_REPO_PASSWORD }}"
+          chart-git: "https://ghproxy.com/https://github.com/deepsola/rocketmq-k8s.git"
+          chart-branch: "go"
+          chart-path: "./"
+
+  e2e-test:
+    if: always()
+    name: Deploy and test
+    needs: [list-version, deploy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      matrix:
+        version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
+    steps:
+      - uses: deepsola/onetest-action@v0.1.1
+        name: e2e test
+        with:
+          action: "test"
+          ask-config: "${{ secrets.ASK_CONFIG }}"
+          test-version: "${{ matrix.version }}"
+          test-code-git: "https://ghproxy.com/https://github.com/cryptoya/rocketmq-e2e.git"
+          test-cmd: "mvn -B test -Dgroups=smoke"    
+
+  clean:
+    if: always()
+    name: Deploy and test
+    needs: [list-version, e2e-test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      matrix:
+        version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
+    steps:
+      - uses: deepsola/onetest-action@v0.1.1
+        name: clean
+        with:
+          action: "clean"
+          ask-config: "${{ secrets.ASK_CONFIG }}"
+          test-version: "${{ matrix.version }}"
