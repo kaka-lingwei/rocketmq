@@ -154,7 +154,7 @@ jobs:
 
   deploy:
     if: always()
-    name: Deploy and test
+    name: Deploy RocketMQ
     needs: [list-version,docker]
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -176,7 +176,7 @@ jobs:
 
   e2e-test:
     if: always()
-    name: Deploy and test
+    name: E2E Test
     needs: [list-version, deploy]
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -184,7 +184,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: deepsola/onetest-action@v0.1.1
+      - uses: deepsola/onetest-action@v0.1.2
         name: e2e test
         with:
           action: "test"
@@ -195,7 +195,7 @@ jobs:
 
   clean:
     if: always()
-    name: Deploy and test
+    name: Clean
     needs: [list-version, e2e-test]
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -203,7 +203,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: deepsola/onetest-action@v0.1.1
+      - uses: deepsola/onetest-action@v0.1.2
         name: clean
         with:
           action: "clean"
