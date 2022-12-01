@@ -162,7 +162,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: deepsola/onetest-action@v0.1.3
+      - uses: deepsola/onetest-action@v0.1.4
         name: Deploy rocketmq
         with:
           action: "deploy"
@@ -173,6 +173,7 @@ jobs:
           chart-git: "https://ghproxy.com/https://github.com/deepsola/rocketmq-k8s.git"
           chart-branch: "go"
           chart-path: "./"
+          job-id: ${{ strategy.job-index }}
 
   e2e-test:
     if: always()
@@ -184,7 +185,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: deepsola/onetest-action@v0.1.3
+      - uses: deepsola/onetest-action@v0.1.4
         name: e2e test
         with:
           action: "test"
@@ -192,6 +193,7 @@ jobs:
           test-version: "${{ matrix.version }}"
           test-code-git: "https://ghproxy.com/https://github.com/cryptoya/rocketmq-e2e.git"
           test-cmd: "mvn -B test -Dgroups=smoke"    
+          job-id: ${{ strategy.job-index }}
 
   clean:
     if: always()
@@ -203,9 +205,10 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: deepsola/onetest-action@v0.1.3
+      - uses: deepsola/onetest-action@v0.1.4
         name: clean
         with:
           action: "clean"
           ask-config: "${{ secrets.ASK_CONFIG }}"
           test-version: "${{ matrix.version }}"
+          job-id: ${{ strategy.job-index }}
