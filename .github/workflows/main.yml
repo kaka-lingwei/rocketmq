@@ -73,9 +73,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          repository: deepsola/rocketmq-k8s.git
-          ref: go
-          path: rocketmq-k8s
+          repository: cryptoya/rocketmq-docker.git
+          ref: master
+          path: rocketmq-docker
       - uses: actions/download-artifact@v3
         name: Download distribution tar
         with:
@@ -84,16 +84,16 @@ jobs:
       - name: Build and save docker images
         id: build-images
         run: |
-          cd rocketmq-k8s/image-build
+          cd rocketmq-docker/rocketmq-k8s-helm/image-build-local
           version=${{ github.event.pull_request.number || github.ref_name }}-$(uuidgen)
           mkdir versionlist
           touch versionlist/"${version}-`echo ${{ matrix.base-image }} | sed -e "s/:/-/g"`"
-          sh ./build-image.sh ${version} ${{ matrix.base-image }} ${{ secrets.DOCKER_REPO_USERNAME }} ${{ secrets.DOCKER_REPO_PASSWORD }}
+          sh ./build-image-local.sh ${version} ${{ matrix.base-image }} ${{ secrets.DOCKER_REPO_USERNAME }} ${{ secrets.DOCKER_REPO_PASSWORD }}
       - uses: actions/upload-artifact@v3
         name: Upload distribution tar
         with:
           name: versionlist
-          path: rocketmq-k8s/image-build/versionlist/*
+          path: rocketmq-docker/rocketmq-k8s-helm/image-build-local/versionlist/*
 
   
   list-version:
@@ -170,8 +170,8 @@ jobs:
           test-version: "${{ matrix.version }}"
           docker-repo-username: "${{ secrets.DOCKER_REPO_USERNAME }}"
           docker-repo-password: "${{ secrets.DOCKER_REPO_PASSWORD }}"
-          chart-git: "https://ghproxy.com/https://github.com/deepsola/rocketmq-k8s.git"
-          chart-branch: "go"
+          chart-git: "https://ghproxy.com/https://github.com/cryptoya/rocketmq-docker.git"
+          chart-branch: "master"
           chart-path: "./"
           job-id: ${{ strategy.job-index }}
 
