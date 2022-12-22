@@ -69,7 +69,7 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        base-image: ["alpine","centos"]
+        base-image: ["centos"]
     steps:
       - uses: actions/checkout@v3
         with:
