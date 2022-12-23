@@ -185,7 +185,7 @@ name-service         1/1     107m
 * [RocketMQ Site](https://github.com/apache/rocketmq-site): The repository for Apache RocketMQ website.
 
 
-----------
+---------- 
 ## Learn it & Contact us
 * Mailing Lists: <https://rocketmq.apache.org/about/contact/>
 * Home: <https://rocketmq.apache.org>
