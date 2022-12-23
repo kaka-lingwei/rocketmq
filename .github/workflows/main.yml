@@ -69,8 +69,8 @@ jobs:
     timeout-minutes: 30
     strategy:
       matrix:
-        base-image: ["ubuntu","alpine","centos"]
-        java-version: ["8","11"]
+        base-image: ["ubuntu"]
+        java-version: ["8"]
     steps:
       - uses: actions/checkout@v3
         with:
