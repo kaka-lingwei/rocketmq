@@ -38,7 +38,7 @@ jobs:
   #         [[ ${{ needs.code-style.result }} == 'success' ]] || exit 1;
 
   dist-tar:
-    if: always() 
+    if: ${{ success() }}
     name: Build dist tar
     #needs: [sanity-check]
     runs-on: ubuntu-latest
@@ -62,7 +62,7 @@ jobs:
           path: distribution/target/rocketmq*/rocketmq*
 
   docker:
-    if: always() 
+    if: ${{ success() }}
     name: Docker images
     needs: [dist-tar]
     runs-on: ubuntu-latest
@@ -98,7 +98,7 @@ jobs:
 
   
   list-version:
-    if: always() 
+    if: ${{ success() }}
     name: List version
     needs: [docker]
     runs-on: ubuntu-latest
@@ -154,7 +154,7 @@ jobs:
   #         verbose: true
 
   deploy:
-    if: always()
+    if: ${{ success() }}
     name: Deploy RocketMQ
     needs: [list-version,docker]
     runs-on: ubuntu-latest
@@ -177,7 +177,7 @@ jobs:
           job-id: ${{ strategy.job-index }}
 
   e2e-test:
-    if: always()
+    if: ${{ success() }}
     name: E2E Test
     needs: [list-version, deploy]
     runs-on: ubuntu-latest
