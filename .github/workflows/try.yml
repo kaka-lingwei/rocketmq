@@ -21,6 +21,7 @@ jobs:
         name: Deploy rocketmq
         with:
           action: "try"
+          ask-config: "${{ secrets.ASK_CONFIG }}"
 
 
 
