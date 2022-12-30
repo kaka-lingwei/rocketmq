@@ -17,14 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: deepsola/onetest-action@v0.2.2
+      - uses: deepsola/onetest-action@v0.2.6
         name: Deploy rocketmq
         with:
           action: "try"
-          helm-values: |
-            - a 
-            -   b
-            -     c : ddd
 
 
 
