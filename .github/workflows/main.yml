@@ -192,8 +192,8 @@ jobs:
           action: "test"
           ask-config: "${{ secrets.ASK_CONFIG }}"
           test-version: "${{ matrix.version }}"
-          test-code-git: "https://ghproxy.com/https://github.com/cryptoya/rocketmq-e2e.git"
-          test-cmd: "cd java/e2e; mvn -B test -Dgroups=smoke"
+          test-code-git: "https://ghproxy.com/https://github.com/apache/rocketmq-e2e.git"
+          test-cmd: "cd java/e2e; mvn -B test"
           job-id: ${{ strategy.job-index }}
 
   clean:
