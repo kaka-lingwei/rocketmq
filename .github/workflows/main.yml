@@ -85,7 +85,7 @@ jobs:
       - name: Build and save docker images
         id: build-images
         run: |
-          cd rocketmq-docker/image-build-local
+          cd rocketmq-docker/image-build-ci
           version=${{ github.event.pull_request.number || github.ref_name }}-$(uuidgen)
           mkdir versionlist
           touch versionlist/"${version}-`echo ${{ matrix.base-image }} | sed -e "s/:/-/g"`"
@@ -94,7 +94,7 @@ jobs:
         name: Upload distribution tar
         with:
           name: versionlist
-          path: rocketmq-docker/image-build-local/versionlist/*
+          path: rocketmq-docker/image-build-ci/versionlist/*
 
   
   list-version:
@@ -186,7 +186,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: deepsola/onetest-action@v0.2.1
+      - uses: deepsola/onetest-action@v0.2.5
         name: e2e test
         with:
           action: "test"
