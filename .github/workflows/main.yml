@@ -163,7 +163,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: deepsola/onetest-action@v0.3.0
+      - uses: deepsola/onetest-action@v0.3.1
         name: Deploy rocketmq
         with:
           action: "deploy"
@@ -186,7 +186,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: deepsola/onetest-action@v0.3.0
+      - uses: deepsola/onetest-action@v0.3.1
         name: e2e test
         with:
           action: "test"
@@ -208,7 +208,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: deepsola/onetest-action@v0.3.0
+      - uses: deepsola/onetest-action@v0.3.1
         name: clean
         with:
           action: "clean"
