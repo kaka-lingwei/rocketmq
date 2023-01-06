@@ -1,0 +1,100 @@
+name: PR-CI
+
+on:
+  pull_request:
+
+concurrency:
+  group: rocketmq-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # code-style:
+  #   if: always()
+  #   name: Code style
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: true
+  #     - name: Check code style
+  #       run: mvn -B -q clean checkstyle:check
+
+  # sanity-check:
+  #   if: always()
+  #   name: Sanity check results
+  #   needs: [code-style]
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   steps:
+  #     - name: Check results
+  #       run: |
+  #         [[ ${{ needs.code-style.result }} == 'success' ]] || exit 1;
+
+  dist-tar:
+    if: ${{ success() }}
+    name: Build dist tar
+    #needs: [sanity-check]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "8"
+          cache: "maven"
+      - name: Build distribution tar
+        run: |
+          mvn -Prelease-all -DskipTests clean install -U
+      - name: Start RocketMQ
+        run: |
+          cd distribution/target/rocketmq-*/rocketmq-*/bin
+          nohup sh bin/mqnamesrv &
+          sleep 60
+          nohup sh bin/mqbroker -n localhost:9876 --enable-proxy &
+      - uses: actions/checkout@v3
+        with:
+          repository: apache/rocketmq-e2e.git
+          ref: master
+      - name: Run test
+        run: |
+          cd rocketmq-e2e/java/e2e
+          mvn -B test -DALL_IP=rocketmq-proxy:127.0.0.1,rocketmq-nameserver:127.0.0.1,rocketmq-broker:127.0.0.1
+
+  # unit-test:
+  #   if: always()
+  #   name: Unit test
+  #   needs: [sanity-check]
+  #   runs-on: ${{ matrix.os }}-latest
+  #   timeout-minutes: 30
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu, macos, windows]
+  #       java-version: [8]
+  #       include:
+  #         - os: ubuntu
+  #           java-version: 11
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: true
+  #     - name: Cache maven repository
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: ~/.m2/repository
+  #         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+  #         restore-keys: ${{ runner.os }}-maven-
+  #     - uses: actions/setup-java@v3
+  #       with:
+  #         java-version: ${{ matrix.java-version }}
+  #         distribution: adopt
+  #     - name: Generate coverage report
+  #       run: mvn -B test -T 2C --file pom.xml
+  #     - name: Upload to Codecov
+  #       uses: codecov/codecov-action@v3
+  #       with:
+  #         fail_ci_if_error: true
+  #         verbose: true
