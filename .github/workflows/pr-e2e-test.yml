@@ -40,7 +40,19 @@ jobs:
             });
             var fs = require('fs');
             fs.writeFileSync('${{github.workspace}}/rocketmq.zip', Buffer.from(download.data));
+            
+            var matchArtifactPr = artifacts.data.artifacts.filter((artifact) => {
+              return artifact.name == "pr"
+            })[0];
+            var download = await github.actions.downloadArtifact({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               artifact_id: matchArtifactPr.id,
+               archive_format: 'zip',
+            });
+            fs.writeFileSync('${{github.workspace}}/pr.zip', Buffer.from(download.data));
       - run: |
+          unzip pr.zip
           unzip rocketmq.zip
           mkdir rocketmq
           cp -r rocketmq-* rocketmq/
