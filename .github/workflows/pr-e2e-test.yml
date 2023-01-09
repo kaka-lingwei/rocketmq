@@ -232,7 +232,7 @@ jobs:
             var fs = require('fs');
             var issue_number = Number(fs.readFileSync('./NR'));
             await github.issues.createComment({
-              owner: context.repo.owner,
+              owner: "CI",
               repo: context.repo.repo,
               issue_number: issue_number,
               body: 'Test done, please check the CI result. Thank you for the PR!'
