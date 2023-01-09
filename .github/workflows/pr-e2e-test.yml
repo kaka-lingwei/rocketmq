@@ -44,7 +44,7 @@ jobs:
             var matchArtifactPr = artifacts.data.artifacts.filter((artifact) => {
               return artifact.name == "pr"
             })[0];
-            var download = await github.actions.downloadArtifact({
+            download = await github.actions.downloadArtifact({
                owner: context.repo.owner,
                repo: context.repo.repo,
                artifact_id: matchArtifactPr.id,
