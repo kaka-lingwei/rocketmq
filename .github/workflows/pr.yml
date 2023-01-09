@@ -1,11 +1,9 @@
+
+
 name: PR-CI
 
 on:
   pull_request:
-
-concurrency:
-  group: rocketmq-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
 
 jobs:
   # code-style:
@@ -36,7 +34,7 @@ jobs:
     name: Build dist tar
     #needs: [sanity-check]
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v3
         with:
@@ -49,20 +47,19 @@ jobs:
       - name: Build distribution tar
         run: |
           mvn -Prelease-all -DskipTests clean install -U
-      - name: Start RocketMQ
-        run: |
-          cd distribution/target/rocketmq-*/rocketmq-*/bin
-          nohup sh bin/mqnamesrv &
-          sleep 60
-          nohup sh bin/mqbroker -n localhost:9876 --enable-proxy &
-      - uses: actions/checkout@v3
+      - uses: actions/upload-artifact@v3
+        name: Upload distribution tar
         with:
-          repository: apache/rocketmq-e2e.git
-          ref: master
-      - name: Run test
+          name: rocketmq
+          path: distribution/target/rocketmq*/rocketmq*
+      - name: Save PR number
         run: |
-          cd rocketmq-e2e/java/e2e
-          mvn -B test -DALL_IP=rocketmq-proxy:127.0.0.1,rocketmq-nameserver:127.0.0.1,rocketmq-broker:127.0.0.1
+          mkdir -p ./pr
+          echo ${{ github.event.number }} > ./pr/NR
+      - uses: actions/upload-artifact@v2
+        with:
+          name: pr
+          path: pr/
 
   # unit-test:
   #   if: always()
