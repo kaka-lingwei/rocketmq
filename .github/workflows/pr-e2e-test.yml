@@ -42,6 +42,7 @@ jobs:
             fs.writeFileSync('${{github.workspace}}/rocketmq.zip', Buffer.from(download.data));
       - run: |
           unzip rocketmq.zip
+          ls
           mv rocketmq* rocketmq
       - uses: actions/checkout@v3
         with:
