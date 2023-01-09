@@ -195,3 +195,23 @@ jobs:
           ask-config: "${{ secrets.ASK_CONFIG }}"
           test-version: "${{ matrix.version }}"
           job-id: ${{ strategy.job-index }}
+          
+  comment:
+    if: ${{ success() }}
+    runs-on: ubuntu-latest
+    name: Comment
+    needs: [list-version, e2e-test, clean]
+    steps:
+      - name: 'Comment on PR'
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            var fs = require('fs');
+            var issue_number = Number(fs.readFileSync('./NR'));
+            await github.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: 'Test done, please check the CI result. Thank you for the PR!'
+            });
