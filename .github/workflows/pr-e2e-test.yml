@@ -43,7 +43,8 @@ jobs:
       - run: |
           unzip rocketmq.zip
           ls
-          mv rocketmq* rocketmq
+          mkdir rocketmq
+          cp -r rocketmq-*/* rocketmq/
       - uses: actions/checkout@v3
         with:
           repository: cryptoya/rocketmq-docker.git
