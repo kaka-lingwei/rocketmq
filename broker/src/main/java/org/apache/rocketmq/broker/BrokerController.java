@@ -81,6 +81,7 @@ import org.apache.rocketmq.broker.processor.EndTransactionProcessor;
 import org.apache.rocketmq.broker.processor.NotificationProcessor;
 import org.apache.rocketmq.broker.processor.PeekMessageProcessor;
 import org.apache.rocketmq.broker.processor.PollingInfoProcessor;
+import org.apache.rocketmq.broker.processor.PopInflightMessageCounter;
 import org.apache.rocketmq.broker.processor.PopMessageProcessor;
 import org.apache.rocketmq.broker.processor.PullMessageProcessor;
 import org.apache.rocketmq.broker.processor.QueryAssignmentProcessor;
@@ -173,6 +174,7 @@ public class BrokerController {
     protected final ConsumerManager consumerManager;
     protected final ConsumerFilterManager consumerFilterManager;
     protected final ConsumerOrderInfoManager consumerOrderInfoManager;
+    protected final PopInflightMessageCounter popInflightMessageCounter;
     protected final ProducerManager producerManager;
     protected final ScheduleMessageService scheduleMessageService;
     protected final ClientHousekeepingService clientHousekeepingService;
@@ -190,7 +192,6 @@ public class BrokerController {
     protected final PullRequestHoldService pullRequestHoldService;
     protected final MessageArrivingListener messageArrivingListener;
     protected final Broker2Client broker2Client;
-    protected final SubscriptionGroupManager subscriptionGroupManager;
     protected final ConsumerIdsChangeListener consumerIdsChangeListener;
     protected final EndTransactionProcessor endTransactionProcessor;
     private final RebalanceLockManager rebalanceLockManager = new RebalanceLockManager();
@@ -222,6 +223,7 @@ public class BrokerController {
     protected CountDownLatch remotingServerStartLatch;
     protected RemotingServer fastRemotingServer;
     protected TopicConfigManager topicConfigManager;
+    protected SubscriptionGroupManager subscriptionGroupManager;
     protected TopicQueueMappingManager topicQueueMappingManager;
     protected ExecutorService sendMessageExecutor;
     protected ExecutorService pullMessageExecutor;
@@ -313,10 +315,11 @@ public class BrokerController {
         this.replyMessageProcessor = new ReplyMessageProcessor(this);
         this.messageArrivingListener = new NotifyMessageArrivingListener(this.pullRequestHoldService, this.popMessageProcessor, this.notificationProcessor);
         this.consumerIdsChangeListener = new DefaultConsumerIdsChangeListener(this);
-        this.consumerManager = new ConsumerManager(this.consumerIdsChangeListener, this.brokerStatsManager);
+        this.consumerManager = new ConsumerManager(this.consumerIdsChangeListener, this.brokerStatsManager, this.brokerConfig);
         this.producerManager = new ProducerManager(this.brokerStatsManager);
         this.consumerFilterManager = new ConsumerFilterManager(this);
         this.consumerOrderInfoManager = new ConsumerOrderInfoManager(this);
+        this.popInflightMessageCounter = new PopInflightMessageCounter(this);
         this.clientHousekeepingService = new ClientHousekeepingService(this);
         this.broker2Client = new Broker2Client(this);
         this.subscriptionGroupManager = messageStoreConfig.isEnableLmq() ? new LmqSubscriptionGroupManager(this) : new SubscriptionGroupManager(this);
@@ -743,7 +746,7 @@ public class BrokerController {
 
                 if (messageStoreConfig.isEnableDLegerCommitLog()) {
                     DLedgerRoleChangeHandler roleChangeHandler = new DLedgerRoleChangeHandler(this, defaultMessageStore);
-                    ((DLedgerCommitLog) defaultMessageStore.getCommitLog()).getdLedgerServer().getdLedgerLeaderElector().addRoleChangeHandler(roleChangeHandler);
+                    ((DLedgerCommitLog) defaultMessageStore.getCommitLog()).getdLedgerServer().getDLedgerLeaderElector().addRoleChangeHandler(roleChangeHandler);
                 }
                 this.brokerStats = new BrokerStats(defaultMessageStore);
                 //load plugin
@@ -929,18 +932,18 @@ public class BrokerController {
             LOG.info("The broker dose not enable acl");
             return;
         }
-    
+
         List<AccessValidator> accessValidators = ServiceProvider.load(AccessValidator.class);
         if (accessValidators.isEmpty()) {
             LOG.info("ServiceProvider loaded no AccessValidator, using default org.apache.rocketmq.acl.plain.PlainAccessValidator");
             accessValidators.add(new PlainAccessValidator());
         }
-    
+
         for (AccessValidator accessValidator : accessValidators) {
             final AccessValidator validator = accessValidator;
             accessValidatorMap.put(validator.getClass(), validator);
             this.registerServerRPCHook(new RPCHook() {
-            
+
                 @Override
                 public void doBeforeRequest(String remoteAddr, RemotingCommand request) {
                     //Do not catch the exception
@@ -956,7 +959,7 @@ public class BrokerController {
     }
 
     private void initialRpcHooks() {
-    
+
         List<RPCHook> rpcHooks = ServiceProvider.load(RPCHook.class);
         if (rpcHooks == null || rpcHooks.isEmpty()) {
             return;
@@ -1177,6 +1180,10 @@ public class BrokerController {
         return consumerOrderInfoManager;
     }
 
+    public PopInflightMessageCounter getPopInflightMessageCounter() {
+        return popInflightMessageCounter;
+    }
+
     public ConsumerOffsetManager getConsumerOffsetManager() {
         return consumerOffsetManager;
     }
@@ -1209,12 +1216,20 @@ public class BrokerController {
         return pullRequestHoldService;
     }
 
+    public void setSubscriptionGroupManager(SubscriptionGroupManager subscriptionGroupManager) {
+        this.subscriptionGroupManager = subscriptionGroupManager;
+    }
+
     public SubscriptionGroupManager getSubscriptionGroupManager() {
         return subscriptionGroupManager;
     }
 
     public PopMessageProcessor getPopMessageProcessor() {
         return popMessageProcessor;
+    }
+
+    public NotificationProcessor getNotificationProcessor() {
+        return notificationProcessor;
     }
 
     public TimerMessageStore getTimerMessageStore() {
@@ -1736,7 +1751,9 @@ public class BrokerController {
                         this.brokerConfig.getSendHeartbeatTimeoutMillis(),
                         this.brokerConfig.isInBrokerContainer(), this.replicasManager.getLastEpoch(),
                         this.messageStore.getMaxPhyOffset(),
-                        this.replicasManager.getConfirmOffset()
+                        this.replicasManager.getConfirmOffset(),
+                        this.brokerConfig.getControllerHeartBeatTimeoutMills(),
+                        this.brokerConfig.getBrokerElectionPriority()
                     );
                 }
             }

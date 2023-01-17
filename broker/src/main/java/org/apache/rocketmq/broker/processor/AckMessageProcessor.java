@@ -141,6 +141,7 @@ public class AckMessageProcessor implements NettyRequestProcessor {
         ackMsg.setBrokerName(ExtraInfoUtil.getBrokerName(extraInfo));
 
         int rqId = ExtraInfoUtil.getReviveQid(extraInfo);
+        long invisibleTime = ExtraInfoUtil.getInvisibleTime(extraInfo);
 
         this.brokerController.getBrokerStatsManager().incBrokerAckNums(1);
         this.brokerController.getBrokerStatsManager().incGroupAckNums(requestHeader.getConsumerGroup(), requestHeader.getTopic(), 1);
@@ -167,12 +168,16 @@ public class AckMessageProcessor implements NettyRequestProcessor {
                     requestHeader.getQueueId(), requestHeader.getOffset(),
                     ExtraInfoUtil.getPopTime(extraInfo));
                 if (nextOffset > -1) {
-                    this.brokerController.getConsumerOffsetManager().commitOffset(channel.remoteAddress().toString(),
-                        requestHeader.getConsumerGroup(), requestHeader.getTopic(),
-                        requestHeader.getQueueId(),
-                        nextOffset);
-                    this.brokerController.getPopMessageProcessor().notifyMessageArriving(requestHeader.getTopic(), requestHeader.getConsumerGroup(),
-                        requestHeader.getQueueId());
+                    if (!this.brokerController.getConsumerOffsetManager().hasOffsetReset(
+                        requestHeader.getTopic(), requestHeader.getConsumerGroup(), requestHeader.getQueueId())) {
+                        this.brokerController.getConsumerOffsetManager().commitOffset(channel.remoteAddress().toString(),
+                            requestHeader.getConsumerGroup(), requestHeader.getTopic(), requestHeader.getQueueId(), nextOffset);
+                    }
+                    if (!this.brokerController.getConsumerOrderInfoManager().checkBlock(requestHeader.getTopic(),
+                        requestHeader.getConsumerGroup(), requestHeader.getQueueId(), invisibleTime)) {
+                        this.brokerController.getPopMessageProcessor().notifyMessageArriving(
+                            requestHeader.getTopic(), requestHeader.getConsumerGroup(), requestHeader.getQueueId());
+                    }
                 } else if (nextOffset == -1) {
                     String errorInfo = String.format("offset is illegal, key:%s, old:%d, commit:%d, next:%d, %s",
                         lockKey, oldOffset, requestHeader.getOffset(), nextOffset, channel.remoteAddress());
@@ -184,10 +189,12 @@ public class AckMessageProcessor implements NettyRequestProcessor {
             } finally {
                 this.brokerController.getPopMessageProcessor().getQueueLockManager().unLock(lockKey);
             }
+            decInFlightMessageNum(requestHeader);
             return response;
         }
 
         if (this.brokerController.getPopMessageProcessor().getPopBufferMergeService().addAk(rqId, ackMsg)) {
+            decInFlightMessageNum(requestHeader);
             return response;
         }
 
@@ -199,7 +206,7 @@ public class AckMessageProcessor implements NettyRequestProcessor {
         msgInner.setBornTimestamp(System.currentTimeMillis());
         msgInner.setBornHost(this.brokerController.getStoreHost());
         msgInner.setStoreHost(this.brokerController.getStoreHost());
-        msgInner.setDeliverTimeMs(ExtraInfoUtil.getPopTime(extraInfo) + ExtraInfoUtil.getInvisibleTime(extraInfo));
+        msgInner.setDeliverTimeMs(ExtraInfoUtil.getPopTime(extraInfo) + invisibleTime);
         msgInner.getProperties().put(MessageConst.PROPERTY_UNIQ_CLIENT_MESSAGE_ID_KEYIDX, PopMessageProcessor.genAckUniqueId(ackMsg));
         msgInner.setPropertiesString(MessageDecoder.messageProperties2String(msgInner.getProperties()));
         PutMessageResult putMessageResult = this.brokerController.getEscapeBridge().putMessageToSpecificQueue(msgInner);
@@ -209,7 +216,16 @@ public class AckMessageProcessor implements NettyRequestProcessor {
             && putMessageResult.getPutMessageStatus() != PutMessageStatus.SLAVE_NOT_AVAILABLE) {
             POP_LOGGER.error("put ack msg error:" + putMessageResult);
         }
+        decInFlightMessageNum(requestHeader);
         return response;
+    }
+
+    private void decInFlightMessageNum(AckMessageRequestHeader requestHeader) {
+        this.brokerController.getPopInflightMessageCounter().decrementInFlightMessageNum(
+            requestHeader.getTopic(),
+            requestHeader.getConsumerGroup(),
+            requestHeader.getExtraInfo()
+        );
     }
 
 }
