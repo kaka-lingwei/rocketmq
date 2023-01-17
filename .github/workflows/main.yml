@@ -40,13 +40,8 @@ jobs:
         with:
           java-version: ${{ matrix.java-version }}
           distribution: adopt
-      - name: Generate coverage report
-        run: mvn -B test -T 2C --file pom.xml
-      - name: Upload to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          fail_ci_if_error: true
-          verbose: true
+      - name: Build and test
+        run: mvn -B package --file pom.xml
             
   dist-tar:
     if: ${{ success() }}
