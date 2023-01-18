@@ -4,6 +4,7 @@ name: PR-CI
 
 on:
   pull_request:
+  push:
 
 jobs:
   unit-test:
