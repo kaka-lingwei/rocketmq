@@ -1,5 +1,5 @@
 ## Apache RocketMQ      
-   
+    
 [![Build Status][maven-build-image]][maven-build-url]
 [![CodeCov][codecov-image]][codecov-url]
 [![Maven Central][maven-central-image]][maven-central-url]
