@@ -41,7 +41,14 @@ jobs:
           java-version: ${{ matrix.java-version }}
           distribution: adopt
       - name: Build and test
-        run: mvn -B package --file pom.xml
+        run: |
+          cd broker
+          mvn -B test --file pom.xml
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v3
+        if: always() # always run even if the previous step fails
+        with:
+          report_paths: '**/surefire-reports/TEST-*.xml'
             
   dist-tar:
     if: ${{ success() }}
@@ -160,7 +167,7 @@ jobs:
       - uses: deepsola/onetest-action@v0.3.1
         name: e2e test
         with:
-          action: "test"
+          action: "test_local"
           ask-config: "${{ secrets.ASK_CONFIG }}"
           test-version: "${{ matrix.version }}"
           test-code-git: "https://ghproxy.com/https://github.com/apache/rocketmq-e2e.git"
@@ -168,6 +175,11 @@ jobs:
           test-code-path: java/e2e
           test-cmd: "mvn -B test"
           job-id: ${{ strategy.job-index }}
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v3
+        if: always() # always run even if the previous step fails
+        with:
+          report_paths: '**/surefire-reports/TEST-*.xml'
 
   clean:
     if: always()
