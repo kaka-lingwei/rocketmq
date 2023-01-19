@@ -102,7 +102,7 @@ jobs:
           version=${{ github.event.pull_request.number || github.ref_name }}-$(uuidgen)
           mkdir versionlist
           touch versionlist/"${version}-`echo ${{ matrix.base-image }} | sed -e "s/:/-/g"`"
-          sh ./build-image-local.sh ${version} ${{ matrix.base-image }} ${{ matrix.java-version }} ${{ secrets.DOCKER_REPO_USERNAME }} ${{ secrets.DOCKER_REPO_PASSWORD }}
+          sh ./build-image-local.sh ${version} ${{ matrix.base-image }} ${{ matrix.java-version }} "cn-cicd-repo-registry.cn-hangzhou.cr.aliyuncs.com/cicd/rocketmq" ${{ secrets.DOCKER_REPO_USERNAME }} ${{ secrets.DOCKER_REPO_PASSWORD }}
       - uses: actions/upload-artifact@v3
         name: Upload distribution tar
         with:
@@ -141,7 +141,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: deepsola/onetest-action@v0.3.6
+      - uses: deepsola/onetest-action@v0.3.7
         name: Deploy rocketmq
         with:
           action: "deploy"
@@ -164,7 +164,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: deepsola/onetest-action@v0.3.6
+      - uses: deepsola/onetest-action@v0.3.7
         name: e2e test
         with:
           action: "test"
@@ -191,7 +191,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: deepsola/onetest-action@v0.3.6
+      - uses: deepsola/onetest-action@v0.3.7
         name: clean
         with:
           action: "clean"
