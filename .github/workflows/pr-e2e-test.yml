@@ -57,7 +57,7 @@ jobs:
           version=${{ github.event.pull_request.number || github.ref_name }}-$(uuidgen)
           mkdir versionlist
           touch versionlist/"${version}-`echo ${{ matrix.base-image }} | sed -e "s/:/-/g"`"
-          sh ./build-image-local.sh ${version} ${{ matrix.base-image }} ${{ matrix.java-version }} ${{ secrets.DOCKER_REPO_USERNAME }} ${{ secrets.DOCKER_REPO_PASSWORD }}
+          sh ./build-image-local.sh ${version} ${{ matrix.base-image }} ${{ matrix.java-version }} "cn-cicd-repo-registry.cn-hangzhou.cr.aliyuncs.com/cicd/rocketmq" ${{ secrets.DOCKER_REPO_USERNAME }} ${{ secrets.DOCKER_REPO_PASSWORD }}
       - uses: actions/upload-artifact@v3
         name: Upload distribution tar
         with:
@@ -95,7 +95,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: deepsola/onetest-action@v0.3.1
+      - uses: deepsola/onetest-action@v0.3.7
         name: Deploy rocketmq
         with:
           action: "deploy"
@@ -118,7 +118,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: deepsola/onetest-action@v0.3.1
+      - uses: deepsola/onetest-action@v0.3.7
         name: e2e test
         with:
           action: "test"
@@ -140,7 +140,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: deepsola/onetest-action@v0.3.1
+      - uses: deepsola/onetest-action@v0.3.7
         name: clean
         with:
           action: "clean"
@@ -148,44 +148,3 @@ jobs:
           test-version: "${{ matrix.version }}"
           job-id: ${{ strategy.job-index }}
           
-#   comment:
-#     if: ${{ success() }}
-#     runs-on: ubuntu-latest
-#     name: Comment
-#     needs: [list-version, e2e-test, clean]
-#     steps:
-#       - name: 'Download artifact'
-#         uses: actions/github-script@v3.1.0
-#         with:
-#           script: |
-#             var artifacts = await github.actions.listWorkflowRunArtifacts({
-#                owner: context.repo.owner,
-#                repo: context.repo.repo,
-#                run_id: ${{github.event.workflow_run.id }},
-#             });            
-#             var matchArtifactPr = artifacts.data.artifacts.filter((artifact) => {
-#               return artifact.name == "pr"
-#             })[0];
-#             var download = await github.actions.downloadArtifact({
-#                owner: context.repo.owner,
-#                repo: context.repo.repo,
-#                artifact_id: matchArtifactPr.id,
-#                archive_format: 'zip',
-#             });
-#             var fs = require('fs');
-#             fs.writeFileSync('${{github.workspace}}/pr.zip', Buffer.from(download.data));
-#       - run: |
-#           unzip pr.zip
-#       - name: 'Comment on PR'
-#         uses: actions/github-script@v3
-#         with:
-#           github-token: ${{ secrets.GH_TOKEN }}
-#           script: |
-#             var fs = require('fs');
-#             var issue_number = Number(fs.readFileSync('./NR'));
-#             await github.issues.createComment({
-#               owner: context.repo.owner,
-#               repo: context.repo.repo,
-#               issue_number: issue_number,
-#               body: 'Test done, please check the CI result. Thank you for the PR!'
-#             });
