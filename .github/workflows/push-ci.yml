@@ -141,7 +141,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: alibaba/cloud-native-test-ci-tool@v0.0.2
+      - uses: alibaba/cloud-native-test-ci-tool@v0.0.3
         name: Deploy rocketmq
         with:
           action: "deploy"
@@ -164,7 +164,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: alibaba/cloud-native-test-ci-tool@v0.0.2
+      - uses: alibaba/cloud-native-test-ci-tool@v0.0.3
         name: e2e test
         with:
           action: "test"
@@ -179,7 +179,7 @@ jobs:
         uses: mikepenz/action-junit-report@v3
         if: always() # always run even if the previous step fails
         with:
-          report_paths: '**/surefire-reports/TEST-*.xml'
+          report_paths: '**/test_report/TEST-*.xml'
 
   clean:
     if: always()
@@ -191,7 +191,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: alibaba/cloud-native-test-ci-tool@v0.0.2
+      - uses: alibaba/cloud-native-test-ci-tool@v0.0.3
         name: clean
         with:
           action: "clean"
