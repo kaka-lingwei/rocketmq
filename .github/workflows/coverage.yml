@@ -28,7 +28,7 @@ jobs:
         name: upload-to-codecov
         with:
           #token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-          files: ./srvutil-report.xml # optional
+          files: ./srvutil-report.xml,./namesrv-report.xml # optional
           name: codecov-umbrella # optional
           fail_ci_if_error: true # optional (default = false)
           verbose: true # optional (default = false)
