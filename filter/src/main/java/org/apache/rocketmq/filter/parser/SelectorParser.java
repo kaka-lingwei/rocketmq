@@ -45,6 +45,7 @@ public class SelectorParser implements SelectorParserConstants {
 
     public static BooleanExpression parse(String sql) throws MQFilterException {
         //        sql = "("+sql+")";
+        System.out.println("add test coverage");
         Object result = PARSE_CACHE.getIfPresent(sql);
         if (result instanceof MQFilterException) {
             throw (MQFilterException) result;
