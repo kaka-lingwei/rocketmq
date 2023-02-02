@@ -32,6 +32,7 @@ jobs:
           name: codecov-umbrella # optional
           fail_ci_if_error: true # optional (default = false)
           verbose: true # optional (default = false)
+          disable_default_path_fixes: false
           #directory: ./xml-report
           #path_to_write_report: codecov_report.txt
           #flags: unittests # optional
