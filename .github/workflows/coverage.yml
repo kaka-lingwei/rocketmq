@@ -5,20 +5,34 @@ on:
   push:
     branches: [master, develop]
 jobs:
-  calculate-coverage:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - uses: actions/checkout@master
-      - name: Set up JDK 8
-        uses: actions/setup-java@v2
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+      - uses: carlosperate/download-file-action@v2
+        name: download-coverage
         with:
-          java-version: "8"
-          distribution: "adopt"
-          cache: "maven"
-      - name: Generate coverage report
-        run: mvn -B test -T 2C --file pom.xml
-      - name: Upload to Codecov
-        uses: codecov/codecov-action@v3
+          file-url: 'https://onetest-opensource-oss.oss-us-west-1.aliyuncs.com/onetest/coverage/5b146481-5ad4-45b9-858e-6179bfd1255c/coverageReport.zip'
+          file-name: 'coverageReport.zip'
+      - run: |
+          unzip coverageReport.zip
+          ls
+          mkdir xml-report
+          cp -r *.xml xml-report/
+          pwd
+      - uses: codecov/codecov-action@v3
+        name: upload-to-codecov
         with:
-          fail_ci_if_error: true
-          verbose: true
+          #token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          files: ./srvutil-report.xml # optional
+          name: codecov-umbrella # optional
+          fail_ci_if_error: true # optional (default = false)
+          verbose: true # optional (default = false)
+          #directory: ./xml-report
+          #path_to_write_report: codecov_report.txt
+          #flags: unittests # optional
+
