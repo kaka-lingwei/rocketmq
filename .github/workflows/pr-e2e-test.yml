@@ -103,7 +103,7 @@ jobs:
           test-version: "${{ matrix.version }}"
           docker-repo-username: "${{ secrets.DOCKER_REPO_USERNAME }}"
           docker-repo-password: "${{ secrets.DOCKER_REPO_PASSWORD }}"
-          chart-git: "https://github.com/cryptoya/rocketmq-docker.git"
+          chart-git: "https://ghproxy.com/https://github.com/cryptoya/rocketmq-docker.git"
           chart-branch: "master"
           chart-path: "./rocketmq-k8s-helm"
           job-id: ${{ strategy.job-index }}
@@ -124,7 +124,7 @@ jobs:
           action: "test"
           ask-config: "${{ secrets.ASK_CONFIG }}"
           test-version: "${{ matrix.version }}"
-          test-code-git: "https://github.com/apache/rocketmq-e2e.git"
+          test-code-git: "https://ghproxy.com/https://github.com/apache/rocketmq-e2e.git"
           test-code-branch: "master"
           test-code-path: java/e2e
           test-cmd: "mvn -B test"
