@@ -39,6 +39,9 @@ jobs:
         if: always() # always run even if the previous step fails
         with:
           report_paths: '**/surefire-reports/TEST-*.xml'
+          annotate_only: true
+          include_passed: true
+          detailed_summary: true
   dist-tar:
     if: ${{ success() }}
     name: Build dist tar
