@@ -134,9 +134,9 @@ jobs:
         if: always() # always run even if the previous step fails
         with:
           report_paths: '**/test_report/TEST-*.xml'
-          annotateOnly: true
-          includePassed: true
-          detailedSummary: true
+          annotate_only: true
+          include_passed: true
+          detailed_summary: true
 
   clean:
     if: always()
