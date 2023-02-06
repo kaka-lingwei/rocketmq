@@ -191,7 +191,7 @@ jobs:
         uses: codecov/codecov-action@v3
         if: always() # always run even if the previous step fails
         with:
-        files: jacoco.xml # optional
+          files: jacoco.xml # optional
           name: rocketmq codecov # optional
           fail_ci_if_error: true # optional (default = false)
           verbose: true # optional (default = false)
