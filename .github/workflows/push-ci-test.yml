@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: kaka-lingwei/cloud-native-test-ci-tool@v0.0.1
+      - uses: kaka-lingwei/cloud-native-test-ci-tool@v0.0.2
         name: Deploy rocketmq
         with:
           action: "deploy"
@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: kaka-lingwei/cloud-native-test-ci-tool@v0.0.1
+      - uses: kaka-lingwei/cloud-native-test-ci-tool@v0.0.2
         name: e2e test
         with:
           action: "test"
