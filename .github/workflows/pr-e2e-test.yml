@@ -95,7 +95,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: alibaba/cloud-native-test-ci-tool@v0.0.1
+      - uses: kaka-lingwei/cloud-native-test-ci-tool@v0.0.1
         name: Deploy rocketmq
         with:
           action: "deploy"
@@ -107,6 +107,8 @@ jobs:
           chart-branch: "master"
           chart-path: "./rocketmq-k8s-helm"
           job-id: ${{ strategy.job-index }}
+          source-code-git: "https://ghproxy.com/https://github.com/apache/rocketmq.git"
+          source-code-branch: "develop"
 
   e2e-test:
     if: ${{ success() }}
@@ -118,7 +120,7 @@ jobs:
       matrix:
         version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
-      - uses: alibaba/cloud-native-test-ci-tool@v0.0.1
+      - uses: kaka-lingwei/cloud-native-test-ci-tool@v0.0.1
         name: e2e test
         with:
           action: "test"
@@ -129,6 +131,8 @@ jobs:
           test-code-path: java/e2e
           test-cmd: "mvn -B test"
           job-id: ${{ strategy.job-index }}
+          source-code-git: "https://ghproxy.com/https://github.com/apache/rocketmq.git"
+          source-code-branch: "develop"
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
         if: always() # always run even if the previous step fails
@@ -137,6 +141,15 @@ jobs:
           annotate_only: true
           include_passed: true
           detailed_summary: true
+      - name: Upload Coverage Report To Codecov
+          uses: codecov/codecov-action@v3
+          if: always() # always run even if the previous step fails
+          with:
+            files: jacoco.xml # optional
+            name: rocketmq codecov # optional
+            fail_ci_if_error: true # optional (default = false)
+            verbose: true # optional (default = false)
+            flags: integration # optional
 
   clean:
     if: always()
