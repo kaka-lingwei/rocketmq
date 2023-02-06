@@ -87,7 +87,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          repository: cryptoya/rocketmq-docker.git
+          repository: apache/rocketmq-docker.git
           ref: master
           path: rocketmq-docker
       - uses: actions/download-artifact@v3
