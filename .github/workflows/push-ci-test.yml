@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 60
     strategy:
       matrix:
-        version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
+        #version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
     steps:
       - uses: kaka-lingwei/cloud-native-test-ci-tool@v0.0.1
         name: Deploy rocketmq
@@ -77,7 +77,6 @@ jobs:
           fail_ci_if_error: true # optional (default = false)
           verbose: true # optional (default = false)
           flags: integration # optional
-
 
   clean:
     if: always()
