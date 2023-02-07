@@ -34,6 +34,7 @@ jobs:
           source-code-git: "https://ghproxy.com/https://github.com/apache/rocketmq.git"
           source-code-branch: "develop"
 
+
   e2e-test:
     if: ${{ success() }}
     name: E2E Test
@@ -80,7 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: alibaba/cloud-native-test-ci-tool@v0.0.2
+      - uses: alibaba/cloud-native-test-ci-tool@v0.0.1
         name: clean
         with:
           action: "clean"
