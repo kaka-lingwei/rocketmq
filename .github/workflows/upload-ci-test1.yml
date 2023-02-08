@@ -4,7 +4,6 @@ on:
   push:
   #schedule:
   #  - cron: "0 18 * * *" # TimeZone: UTC 0
-
 concurrency:
   group: rocketmq-${{ github.ref }}
   cancel-in-progress: true
@@ -44,7 +43,7 @@ jobs:
   e2e-test:
     if: always()
     name: E2E Test
-    needs: [deploy]
+    needs: [dist-tar]
     runs-on: ubuntu-latest
     timeout-minutes: 180
     steps:
