@@ -27,6 +27,8 @@ jobs:
           distribution: "temurin"
           java-version: "8"
           cache: "maven"
+      - name: Tar files
+          run: tar -cvf sourceCode.tar ${{ github.workspace }}/*
       - name: Build distribution tar
         run: |
           ls
@@ -35,7 +37,7 @@ jobs:
         name: Upload distribution tar
         with:
           name: sourceCode
-          path: ${{ github.workspace }}/*
+          path: sourceCode.tar
 
 
 #  deploy:
@@ -72,13 +74,11 @@ jobs:
         name: Download distribution tar
         with:
           name: sourceCode
-          path: rocketmq
+          path: sourceCode.tar
       - name: show information
         run: |
           ls
           pwd
-          cd rocketmq
-          ls
 #      - uses: kaka-lingwei/cloud-native-test-ci-tool@v0.0.4
 #        name: e2e test
 #        with:
