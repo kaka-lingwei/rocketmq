@@ -34,7 +34,7 @@ jobs:
           pwd
       - name: Tar files
         run: |
-          tar -cvf sourceCode.tar *
+          tar -zcvf sourceCode.tar.gz *
       - uses: actions/upload-artifact@v3
         name: Upload distribution tar
         with:
