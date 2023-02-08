@@ -32,13 +32,11 @@ jobs:
           mvn -Prelease-all -DskipTests clean install -U
           ls
           pwd
-          cd ../
-          ls
       - uses: actions/upload-artifact@v3
         name: Upload distribution tar
         with:
           name: sourceCode
-          path: rocketmq/*
+          path: /*
 
 
   deploy:
