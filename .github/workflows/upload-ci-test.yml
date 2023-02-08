@@ -34,7 +34,7 @@ jobs:
           pwd
       - name: Tar files
         run: |
-          tar -cvf sourceCode.tar ${{ github.workspace }}/*
+          tar -cvf sourceCode.tar *
       - uses: actions/upload-artifact@v3
         name: Upload distribution tar
         with:
@@ -74,12 +74,12 @@ jobs:
         name: Download distribution tar
         with:
           name: sourceCode
-          path: sourceCode.tar
+          path: sourceCode
       - name: show information
         run: |
           ls
           pwd
-      - uses: kaka-lingwei/cloud-native-test-ci-tool@v0.0.6
+      - uses: kaka-lingwei/cloud-native-test-ci-tool@v0.0.7
         name: e2e test
         with:
           action: "test"
