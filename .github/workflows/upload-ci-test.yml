@@ -112,6 +112,7 @@ jobs:
           fail_ci_if_error: true # optional (default = false)
           verbose: true # optional (default = false)
           flags: integration # optional
+
   clean:
     if: always()
     name: Clean
