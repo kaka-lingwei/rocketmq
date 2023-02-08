@@ -32,8 +32,8 @@ jobs:
           mvn -Prelease-all -DskipTests clean install -U
           ls
           pwd
-      - name: Tar files
-          run: tar -cvf sourceCode.tar /path/to/my/directory
+#      - name: Tar files
+#          run: tar -cvf sourceCode.tar /path/to/my/directory
       - uses: actions/upload-artifact@v3
         name: Upload distribution tar
         with:
