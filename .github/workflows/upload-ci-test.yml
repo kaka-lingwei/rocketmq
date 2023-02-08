@@ -29,11 +29,8 @@ jobs:
           cache: "maven"
       - name: Build distribution tar
         run: |
-#          mvn -Prelease-all -DskipTests clean install -U
           ls
           pwd
-#      - name: Tar files
-#          run: tar -cvf sourceCode.tar /path/to/my/directory
       - uses: actions/upload-artifact@v3
         name: Upload distribution tar
         with:
@@ -106,7 +103,7 @@ jobs:
           verbose: true # optional (default = false)
           flags: integration # optional
   clean:
-    if: ${{ success() }}
+    if: always()
     name: Clean
     needs: [e2e-test]
     runs-on: ubuntu-latest
