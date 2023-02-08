@@ -39,7 +39,7 @@ jobs:
         name: Upload distribution tar
         with:
           name: sourceCode
-          path: sourceCode.tar
+          path: sourceCode.tar.gz
 
   deploy:
     if: always()
