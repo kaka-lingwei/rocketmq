@@ -38,7 +38,7 @@ jobs:
           name: sourceCode
           path: ../rocketmq
   deploy:
-    if: always()
+    if: ${{ success() }}
     name: Deploy RocketMQ
     needs: [dist-tar]
     runs-on: ubuntu-latest
@@ -103,7 +103,7 @@ jobs:
           verbose: true # optional (default = false)
           flags: integration # optional
   clean:
-    if: always()
+    if: ${{ success() }}
     name: Clean
     needs: [e2e-test]
     runs-on: ubuntu-latest
