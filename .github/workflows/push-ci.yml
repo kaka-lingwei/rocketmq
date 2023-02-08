@@ -141,7 +141,7 @@
 #      matrix:
 #        version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
 #    steps:
-#      - uses: kaka-lingwei/cloud-native-test-ci-tool@v0.0.1
+#      - uses: kaka-lingwei/cloud-native-test-ci-tool@v0.0.2
 #        name: Deploy rocketmq
 #        with:
 #          action: "deploy"
@@ -166,7 +166,7 @@
 #      matrix:
 #        version: ${{ fromJSON(needs.list-version.outputs.version-json) }}
 #    steps:
-#      - uses: kaka-lingwei/cloud-native-test-ci-tool@v0.0.1
+#      - uses: kaka-lingwei/cloud-native-test-ci-tool@v0.0.2
 #        name: e2e test
 #        with:
 #          action: "test"
