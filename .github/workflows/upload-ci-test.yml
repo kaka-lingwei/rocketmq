@@ -37,7 +37,6 @@ jobs:
         with:
           name: sourceCode
           path: ../rocketmq
-
   deploy:
     if: always()
     name: Deploy RocketMQ
