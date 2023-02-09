@@ -1,7 +1,7 @@
 name: Upload-CI-TEST
 
 on:
-  pull_request:
+  push:
   #schedule:
   #  - cron: "0 18 * * *" # TimeZone: UTC 0
 
@@ -78,7 +78,7 @@ jobs:
         run: |
           ls
           pwd
-      - uses: kaka-lingwei/cloud-native-test-ci-tool@v0.0.9
+      - uses: kaka-lingwei/cloud-native-test-ci-tool@v0.0.10
         name: e2e test
         with:
           action: "test"
