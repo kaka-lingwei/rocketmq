@@ -4,8 +4,6 @@ on:
   pull_request:
   #schedule:
   #  - cron: "0 18 * * *" # TimeZone: UTC 0
-
-
 concurrency:
   group: rocketmq-${{ github.ref }}
   cancel-in-progress: true
