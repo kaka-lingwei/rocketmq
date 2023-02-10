@@ -39,6 +39,8 @@ jobs:
         with:
           name: sourceCode
           path: sourceCode.tar.gz
+
+
   deploy:
     if: always()
     name: Deploy RocketMQ
