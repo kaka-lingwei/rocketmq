@@ -86,7 +86,7 @@ jobs:
           test-code-git: "https://ghproxy.com/https://github.com/apache/rocketmq-e2e.git"
           test-code-branch: "master"
           test-code-path: java/e2e
-          test-cmd: "mvn -B test -Dgroups=smoke "
+          test-cmd: "mvn -B test "
           job-id: ${{ strategy.job-index }}
           source-code-git: "https://ghproxy.com/https://github.com/apache/rocketmq.git"
           source-code-branch: "develop"
