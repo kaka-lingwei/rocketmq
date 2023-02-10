@@ -4,7 +4,6 @@ on:
   pull_request:
   #schedule:
   #  - cron: "0 18 * * *" # TimeZone: UTC 0
-
 concurrency:
   group: rocketmq-${{ github.ref }}
   cancel-in-progress: true
@@ -69,6 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 180
     steps:
+      - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
         name: Download distribution tar
         with:
@@ -112,6 +112,8 @@ jobs:
           fail_ci_if_error: true # optional (default = false)
           verbose: true # optional (default = false)
           flags: integration # optional
+
+
 
   clean:
     if: always()
